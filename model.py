@@ -45,33 +45,36 @@ def build_model(args):
     """
     NVIDIA model used
     Image normalization to avoid saturation and make gradients work better.
-    Convolution: 5x5, filter: 24, strides: 2x2, activation: ELU
-    Convolution: 5x5, filter: 36, strides: 2x2, activation: ELU
-    Convolution: 5x5, filter: 48, strides: 2x2, activation: ELU
-    Convolution: 3x3, filter: 64, strides: 1x1, activation: ELU
-    Convolution: 3x3, filter: 64, strides: 1x1, activation: ELU
+    Convolution: 5x5, filter: 24, strides: 2x2, activation: RELU
+    Convolution: 5x5, filter: 36, strides: 2x2, activation: RELU
+    Convolution: 5x5, filter: 48, strides: 2x2, activation: RELU
     Drop out (0.5)
-    Fully connected: neurons: 100, activation: ELU
-    Fully connected: neurons: 50, activation: ELU
-    Fully connected: neurons: 10, activation: ELU
+    Convolution: 3x3, filter: 64, strides: 1x1, activation: RELU
+    Pooling: 1x1
+    Convolution: 3x3, filter: 64, strides: 1x1, activation: RELU
+    Drop out (0.5)
+    Fully connected: neurons: 100, activation: RELU
+    Fully connected: neurons: 50, activation: RELU
+    Fully connected: neurons: 10, activation: RELU
     Fully connected: neurons: 1 (output)
     # the convolution layers are meant to handle feature engineering
     the fully connected layer for predicting the steering angle.
     dropout avoids overfitting
-    ELU(Exponential linear unit) function takes care of the Vanishing gradient problem. 
+    RELU(Exponential linear unit) function takes care of the Vanishing gradient problem. 
     """
     model = Sequential()
     model.add(Lambda(lambda x: x/127.5-1.0, input_shape=INPUT_SHAPE))
-    model.add(Conv2D(24, 5, 5, activation='elu', subsample=(2, 2)))
-    model.add(Conv2D(36, 5, 5, activation='elu', subsample=(2, 2)))
-    model.add(Conv2D(48, 5, 5, activation='elu', subsample=(2, 2)))
-    model.add(Conv2D(64, 3, 3, activation='elu'))
-    model.add(Conv2D(64, 3, 3, activation='elu'))
+    model.add(Conv2D(24, 5, 5, activation='relu', subsample=(2, 2)))
+    model.add(Conv2D(36, 5, 5, activation='relu', subsample=(2, 2)))
+    model.add(Conv2D(48, 5, 5, activation='relu', subsample=(2, 2)))
+    model.add(Dropout(args.keep_prob))
+    model.add(Conv2D(64, 3, 3, activation='relu'))
+    model.add(MaxPooling2D(pool_size=(1, 1)))
     model.add(Dropout(args.keep_prob))
     model.add(Flatten())
-    model.add(Dense(100, activation='elu'))
-    model.add(Dense(50, activation='elu'))
-    model.add(Dense(10, activation='elu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(10, activation='relu'))
     model.add(Dense(1))
     model.summary()
 
@@ -101,7 +104,7 @@ def train_model(model, args, X_train, X_valid, y_train, y_valid):
     #divide by the number of them
     #that value is our mean squared error! this is what we want to minimize via
     #gradient descent
-    model.compile(loss='mean_squared_error', optimizer=Adam(lr=args.learning_rate))
+    model.compile(loss='mean_squared_error', optimizer='rmsprop', metrics=['accuracy'])
 
     #Fits the model on data generated batch-by-batch by a Python generator.
 
@@ -135,8 +138,8 @@ def main():
     parser.add_argument('-d', help='data directory',        dest='data_dir',          type=str,   default='data')
     parser.add_argument('-t', help='test size fraction',    dest='test_size',         type=float, default=0.2)
     parser.add_argument('-k', help='drop out probability',  dest='keep_prob',         type=float, default=0.5)
-    parser.add_argument('-n', help='number of epochs',      dest='nb_epoch',          type=int,   default=5)
-    parser.add_argument('-s', help='samples per epoch',     dest='samples_per_epoch', type=int,   default=10000)
+    parser.add_argument('-n', help='number of epochs',      dest='nb_epoch',          type=int,   default=10)
+    parser.add_argument('-s', help='samples per epoch',     dest='samples_per_epoch', type=int,   default=20000)
     parser.add_argument('-b', help='batch size',            dest='batch_size',        type=int,   default=40)
     parser.add_argument('-o', help='save best models only', dest='save_best_only',    type=s2b,   default='true')
     parser.add_argument('-l', help='learning rate',         dest='learning_rate',     type=float, default=1.0e-4)
