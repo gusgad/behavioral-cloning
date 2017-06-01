@@ -5,9 +5,11 @@ from sklearn.model_selection import train_test_split #to split out training and 
 #The Sequential container is a linear stack of layers
 from keras.models import Sequential
 #popular optimization strategy that uses gradient descent 
-from keras.optimizers import Adam
+from keras.optimizers import RMSprop
 #to save our model periodically as checkpoints for loading later
 from keras.callbacks import ModelCheckpoint
+#normalizing imputs before nonlinearity
+from keras.layers.normalization import BatchNormalization
 #what types of layers do we want our model to have?
 from keras.layers import Lambda, Conv2D, MaxPooling2D, Dropout, Dense, Flatten
 #helper class to define input shape and generate training images given image paths & steering angles
@@ -66,9 +68,14 @@ def build_model(args):
     model.add(Lambda(lambda x: x/127.5-1.0, input_shape=INPUT_SHAPE))
     model.add(Conv2D(24, 5, 5, activation='relu', subsample=(2, 2)))
     model.add(Conv2D(36, 5, 5, activation='relu', subsample=(2, 2)))
-    model.add(Conv2D(48, 5, 5, activation='relu', subsample=(2, 2)))
+    model.add(Conv2D(48, 5, 5, activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(args.keep_prob))
+    model.add(BatchNormalization())
     model.add(Conv2D(64, 3, 3, activation='relu'))
+    model.add(Conv2D(78, 3, 3, activation='relu'))
+    model.add(Conv2D(90, 1, 1, activation='relu'))
+    model.add(Conv2D(90, 1, 1, activation='relu'))
     model.add(MaxPooling2D(pool_size=(1, 1)))
     model.add(Dropout(args.keep_prob))
     model.add(Flatten())
@@ -104,7 +111,7 @@ def train_model(model, args, X_train, X_valid, y_train, y_valid):
     #divide by the number of them
     #that value is our mean squared error! this is what we want to minimize via
     #gradient descent
-    model.compile(loss='mean_squared_error', optimizer='rmsprop', metrics=['accuracy'])
+    model.compile(loss='mean_squared_error', optimizer=RMSprop(lr=args.learning_rate))
 
     #Fits the model on data generated batch-by-batch by a Python generator.
 
@@ -138,8 +145,8 @@ def main():
     parser.add_argument('-d', help='data directory',        dest='data_dir',          type=str,   default='data')
     parser.add_argument('-t', help='test size fraction',    dest='test_size',         type=float, default=0.2)
     parser.add_argument('-k', help='drop out probability',  dest='keep_prob',         type=float, default=0.5)
-    parser.add_argument('-n', help='number of epochs',      dest='nb_epoch',          type=int,   default=10)
-    parser.add_argument('-s', help='samples per epoch',     dest='samples_per_epoch', type=int,   default=20000)
+    parser.add_argument('-n', help='number of epochs',      dest='nb_epoch',          type=int,   default=20)
+    parser.add_argument('-s', help='samples per epoch',     dest='samples_per_epoch', type=int,   default=40000)
     parser.add_argument('-b', help='batch size',            dest='batch_size',        type=int,   default=40)
     parser.add_argument('-o', help='save best models only', dest='save_best_only',    type=s2b,   default='true')
     parser.add_argument('-l', help='learning rate',         dest='learning_rate',     type=float, default=1.0e-4)
