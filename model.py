@@ -66,22 +66,22 @@ def build_model(args):
     """
     model = Sequential()
     model.add(Lambda(lambda x: x/127.5-1.0, input_shape=INPUT_SHAPE))
-    model.add(Conv2D(24, 5, 5, activation='relu', subsample=(2, 2)))
-    model.add(Conv2D(36, 5, 5, activation='relu', subsample=(2, 2)))
-    model.add(Conv2D(48, 5, 5, activation='relu'))
+    model.add(Conv2D(24, 5, 5, activation='elu', subsample=(2, 2)))
+    model.add(Conv2D(40, 5, 5, activation='elu', subsample=(2, 2)))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(args.keep_prob))
-    model.add(BatchNormalization())
-    model.add(Conv2D(64, 3, 3, activation='relu'))
-    model.add(Conv2D(78, 3, 3, activation='relu'))
-    model.add(Conv2D(90, 1, 1, activation='relu'))
-    model.add(Conv2D(90, 1, 1, activation='relu'))
+    model.add(Conv2D(64, 3, 3, activation='elu'))
+    model.add(Conv2D(78, 3, 3, activation='elu'))
+    model.add(Dropout(args.keep_prob))
+    model.add(Conv2D(90, 1, 1, activation='elu'))
+    model.add(Conv2D(90, 1, 1, activation='elu'))
     model.add(MaxPooling2D(pool_size=(1, 1)))
     model.add(Dropout(args.keep_prob))
+    model.add(BatchNormalization())
     model.add(Flatten())
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(50, activation='relu'))
-    model.add(Dense(10, activation='relu'))
+    model.add(Dense(100, activation='elu'))
+    model.add(Dense(50, activation='elu'))
+    model.add(Dense(10, activation='elu'))
     model.add(Dense(1))
     model.summary()
 
@@ -111,7 +111,7 @@ def train_model(model, args, X_train, X_valid, y_train, y_valid):
     #divide by the number of them
     #that value is our mean squared error! this is what we want to minimize via
     #gradient descent
-    model.compile(loss='mean_squared_error', optimizer=RMSprop(lr=args.learning_rate))
+    model.compile(loss='mean_squared_error', optimizer='rmsprop', metrics=['accuracy'])
 
     #Fits the model on data generated batch-by-batch by a Python generator.
 
