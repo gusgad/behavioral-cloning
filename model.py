@@ -105,18 +105,13 @@ def train_model(model, args, X_train, X_valid, y_train, y_valid):
                                  save_best_only=args.save_best_only,
                                  mode='auto')
 
-    #calculate the difference between expected steering angle and actual steering angle
-    #square the difference
-    #add up all those differences for as many data points as we have
-    #divide by the number of them
-    #that value is our mean squared error! this is what we want to minimize via
-    #gradient descent
+    
     model.compile(loss='mean_squared_error', optimizer='rmsprop', metrics=['accuracy'])
 
     #Fits the model on data generated batch-by-batch by a Python generator.
 
     #The generator is run in parallel to the model, for efficiency. 
-    #For instance, this allows you to do real-time data augmentation on images on CPU in 
+    #For instance, this allows  to do real-time data augmentation on images on CPU in 
     #parallel to training your model on GPU.
     #so we reshape our data into their appropriate batches and train our model simulatenously
     model.fit_generator(batch_generator(args.data_dir, X_train, y_train, args.batch_size, True),
@@ -128,7 +123,7 @@ def train_model(model, args, X_train, X_valid, y_train, y_valid):
                         callbacks=[checkpoint],
                         verbose=1)
 
-#for command line args
+#command line args
 def s2b(s):
     """
     Converts a string to boolean value
